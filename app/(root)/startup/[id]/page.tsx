@@ -31,7 +31,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <p className="sub-heading !max-w-5xl">{post.description}</p>
       </section>
       <section className="section_container">
-        <Image src={post.image ?? "/placeholder.png"} alt="thumbnail" className="w-full h-auto rounded-xl" width={800} height={450} />
+        <Image src={post.image ?? "/placeholder.png"} alt="thumbnail" className="w-full max-w-3xl mx-auto aspect-video object-cover rounded-xl" width={1200} height={675} priority />
         <div className="space-y-5 mt-10 max-w-4xl mx-auto">
           <div className="flex-between gap-5">
             <Link href={`/user/${post.author?._id}`} className="flex gap-2 items-center mb-3">
