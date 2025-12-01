@@ -81,7 +81,7 @@ const StartupForm = () => {
         <label htmlFor="description" className="startup-form_label">
           Description
         </label>
-        <Textarea id="description" name="description" className="startup-form_textarea" required placeholder="Startup Description" />
+        <Textarea id="description" name="description" className="startup-form_textarea" required placeholder="Startup Description (Min. 20 characters)" />
 
         {errors.description && <p className="startup-form_error">{errors.description}</p>}
       </div>
