@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { parseServerActionResponse } from "./utils"
 import slugify from "slugify"
 import { writeClient } from "@/sanity/lib/write-client"
+import { revalidatePath } from "next/cache"
 
 export const createPitch = async (state: any, form: FormData, pitch: string) => {
   const session = await auth()
@@ -32,6 +33,8 @@ export const createPitch = async (state: any, form: FormData, pitch: string) => 
     }
 
     const result = await writeClient.create({ _type: "startup", ...startup })
+
+    revalidatePath("/")
 
     return parseServerActionResponse({
       ...result,
