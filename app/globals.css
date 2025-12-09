@@ -8,11 +8,19 @@
   :root {
     --radius: 0.5rem;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
   .flex-between {
     @apply flex justify-between items-center;
+  }
+
+  .flex-center {
+    @apply flex justify-center items-center;
   }
 
   .text-30-extrabold {

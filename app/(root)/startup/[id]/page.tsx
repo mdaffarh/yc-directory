@@ -1,6 +1,6 @@
 import { formatDate } from "@/lib/utils"
 import { client } from "@/sanity/lib/client"
-import { PLAYLIST_BY_SLUG_QUERY, STARTUP_BY_ID_QUERY } from "@/sanity/lib/queries"
+import { LIKE_QUERY, PLAYLIST_BY_SLUG_QUERY, STARTUP_BY_ID_QUERY } from "@/sanity/lib/queries"
 import { notFound } from "next/navigation"
 import React, { Suspense } from "react"
 import Image from "next/image"
@@ -9,6 +9,9 @@ import markdownit from "markdown-it"
 import { Skeleton } from "@/components/ui/skeleton"
 import View from "@/components/View"
 import StartupCard, { StartupTypeCard } from "@/components/StartupCard"
+import { auth } from "@/auth"
+import LikeButton from "@/components/LikeButton"
+import StartupActions from "@/components/StartupActions"
 
 export const experimental_ppr = true
 
@@ -16,10 +19,19 @@ const md = markdownit()
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const id = (await params).id
+  const session = await auth()
 
-  const [post, { select: editorPosts }] = await Promise.all([client.fetch(STARTUP_BY_ID_QUERY, { id }), client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" })])
+  const [post, editorPicksPlaylist, like] = await Promise.all([
+    client.withConfig({ useCdn: false }).fetch(STARTUP_BY_ID_QUERY, { id }),
+    client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" }),
+    session ? client.withConfig({ useCdn: false }).fetch(LIKE_QUERY, { authorId: session.id, startupId: id }) : null,
+  ])
+  const editorPosts = editorPicksPlaylist?.select || []
 
   if (!post) return notFound()
+
+  const isLiked = !!like
+  const isOwner = session?.id === post.author?._id
 
   const parsedContent = md.render(post?.pitch || "")
 
@@ -42,6 +54,11 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
             </Link>
             <p className="category-tag">{post.category}</p>
+          </div>
+
+          <div className="flex-between gap-3">
+            {session && <LikeButton startupId={id} isLiked={isLiked} />}
+            {isOwner && <StartupActions id={id} authorId={post.author._id} />}
           </div>
 
           <h3 className="text-30-bold">Pitch Detail</h3>

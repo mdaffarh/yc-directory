@@ -10,14 +10,28 @@ import { formSchema } from "@/lib/validation"
 import { z } from "zod"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { createPitch } from "@/lib/actions"
+import { updatePitch } from "@/lib/actions"
 import { STARTUP_CATEGORIES } from "@/lib/constants"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const StartupForm = () => {
+interface StartupFormEditProps {
+  startup: {
+    _id: string
+    title: string
+    description: string
+    category: string
+    image: string
+    pitch: string
+    author?: {
+      _id: string
+    }
+  }
+}
+
+const StartupFormEdit = ({ startup }: StartupFormEditProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [pitch, setPitch] = useState("")
-  const [category, setCategory] = useState("")
+  const [pitch, setPitch] = useState(startup.pitch)
+  const [category, setCategory] = useState(startup.category)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -33,14 +47,14 @@ const StartupForm = () => {
 
       await formSchema.parseAsync(formValues)
 
-      const result = await createPitch(prevState, formData, pitch)
+      const result = await updatePitch(prevState, formData, pitch, startup._id)
 
       if (result.status === "SUCCESS") {
         toast({
           title: "Success",
-          description: "Your startup pitch has been created successfully",
+          description: "Your startup has been updated successfully",
         })
-        router.push(`/startup/${result._id}`)
+        router.push(`/user/${startup.author?._id}`)
       }
 
       return result
@@ -76,7 +90,7 @@ const StartupForm = () => {
         <label htmlFor="title" className="startup-form_label">
           Title
         </label>
-        <Input id="title" name="title" className="startup-form_input" required placeholder="Startup Title" />
+        <Input id="title" name="title" className="startup-form_input" required placeholder="Startup Title" defaultValue={startup.title} />
 
         {errors.title && <p className="startup-form_error">{errors.title}</p>}
       </div>
@@ -84,7 +98,7 @@ const StartupForm = () => {
         <label htmlFor="description" className="startup-form_label">
           Description
         </label>
-        <Textarea id="description" name="description" className="startup-form_textarea" required placeholder="Startup Description (Min. 20 characters)" />
+        <Textarea id="description" name="description" className="startup-form_textarea" required placeholder="Startup Description" defaultValue={startup.description} />
 
         {errors.description && <p className="startup-form_error">{errors.description}</p>}
       </div>
@@ -112,7 +126,7 @@ const StartupForm = () => {
         <label htmlFor="Image" className="startup-form_label">
           Image URL
         </label>
-        <Input id="link" name="link" className="startup-form_input" required placeholder="Startup Image URL" />
+        <Input id="link" name="link" className="startup-form_input" required placeholder="Startup Image URL" defaultValue={startup.image} />
 
         {errors.link && <p className="startup-form_error">{errors.link}</p>}
       </div>
@@ -139,11 +153,11 @@ const StartupForm = () => {
       </div>
 
       <Button type="submit" className="startup-form_btn text-white" disabled={isPending}>
-        {isPending ? "Submitting..." : "Submit Your Pitch"}
+        {isPending ? "Updating..." : "Update Your Pitch"}
         <Send className="size-6 ml-6" />
       </Button>
     </form>
   )
 }
 
-export default StartupForm
+export default StartupFormEdit

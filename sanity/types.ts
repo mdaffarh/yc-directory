@@ -13,6 +13,26 @@
  */
 
 // Source: schema.json
+export type Like = {
+  _id: string;
+  _type: "like";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  author?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "author";
+  };
+  startup?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "startup";
+  };
+};
+
 export type Playlist = {
   _id: string;
   _type: "playlist";
@@ -185,42 +205,12 @@ export type SanityAssetSourceData = {
   url?: string;
 };
 
-export type AllSanitySchemaTypes = Playlist | Startup | Author | Markdown | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
+export type AllSanitySchemaTypes = Like | Playlist | Startup | Author | Markdown | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: sanity/lib/queries.ts
 // Variable: STARTUPS_QUERY
-// Query: *[_type == "startup" && defined(slug.current) && !defined($search) || title match $search || category match $search || author->name match $search] | order(_createdAt desc){    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image}
+// Query: *[_type == "startup" && defined(slug.current) && (!defined($search) || title match $search || category match $search || author->name match $search) && (!defined($category) || category == $category)] | order(  select(    $sort == "oldest" => _createdAt,    $sort == "views" => -views,    $sort == "likes" => -count(*[_type == "like" && startup._ref == ^._id]),    -_createdAt  )){    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image,    "likes": count(*[_type == "like" && startup._ref == ^._id])}
 export type STARTUPS_QUERYResult = Array<{
-  _id: string;
-  title: string | null;
-  slug: Slug | null;
-  _createdAt: string;
-  author: null;
-  views: null;
-  description: null;
-  category: null;
-  image: null;
-} | {
-  _id: string;
-  title: null;
-  slug: null;
-  _createdAt: string;
-  author: null;
-  views: null;
-  description: null;
-  category: null;
-  image: string | null;
-} | {
-  _id: string;
-  title: string | null;
-  slug: null;
-  _createdAt: string;
-  author: null;
-  views: null;
-  description: string | null;
-  category: null;
-  image: null;
-} | {
   _id: string;
   title: string | null;
   slug: Slug | null;
@@ -235,9 +225,10 @@ export type STARTUPS_QUERYResult = Array<{
   description: string | null;
   category: string | null;
   image: string | null;
+  likes: number;
 }>;
 // Variable: STARTUP_BY_ID_QUERY
-// Query: *[_type == "startup" && _id == $id][0]{      _id,    title,    slug,    _createdAt,    author -> {        _id, name,username, image, bio    },    views,    description,    category,    image,    pitch,}
+// Query: *[_type == "startup" && _id == $id][0]{      _id,    title,    slug,    _createdAt,    author -> {        _id, name,username, image, bio    },    views,    description,    category,    image,    pitch,    "likes": count(*[_type == "like" && startup._ref == ^._id])}
 export type STARTUP_BY_ID_QUERYResult = {
   _id: string;
   title: string | null;
@@ -255,6 +246,7 @@ export type STARTUP_BY_ID_QUERYResult = {
   category: string | null;
   image: string | null;
   pitch: string | null;
+  likes: number;
 } | null;
 // Variable: STARTUP_VIEWS_QUERY
 // Query: *[_type == "startup" && _id == $id][0]{        _id, views    }
@@ -284,8 +276,78 @@ export type AUTHOR_BY_ID_QUERYResult = {
   image: string | null;
   bio: string | null;
 } | null;
+// Variable: STARTUPS_BY_AUTHOR_QUERY
+// Query: *[_type == "startup" && author._ref == $id] | order(_createdAt desc){    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image,    "likes": count(*[_type == "like" && startup._ref == ^._id])    }
+export type STARTUPS_BY_AUTHOR_QUERYResult = Array<{
+  _id: string;
+  title: string | null;
+  slug: Slug | null;
+  _createdAt: string;
+  author: {
+    _id: string;
+    name: string | null;
+    image: string | null;
+    bio: string | null;
+  } | null;
+  views: number | null;
+  description: string | null;
+  category: string | null;
+  image: string | null;
+  likes: number;
+}>;
+// Variable: AUTHOR_STATS_QUERY
+// Query: *[_type == "author" && _id == $id][0]{    _id,    name,    "totalStartups": count(*[_type == "startup" && author._ref == ^._id]),    "startups": *[_type == "startup" && author._ref == ^._id]{        views,        "likes": count(*[_type == "like" && startup._ref == ^._id])    },    "topStartup": *[_type == "startup" && author._ref == ^._id] | order(views desc)[0]{        _id,        title,        views,        slug    },    "mostLikedStartup": *[_type == "startup" && author._ref == ^._id] | order(count(*[_type == "like" && startup._ref == ^._id]) desc)[0]{        _id,        title,        "likes": count(*[_type == "like" && startup._ref == ^._id]),        slug    },    "totalLikes": count(*[_type == "like" && startup->author._ref == ^._id])    }
+export type AUTHOR_STATS_QUERYResult = {
+  _id: string;
+  name: string | null;
+  totalStartups: number;
+  startups: Array<{
+    views: number | null;
+    likes: number;
+  }>;
+  topStartup: {
+    _id: string;
+    title: string | null;
+    views: number | null;
+    slug: Slug | null;
+  } | null;
+  mostLikedStartup: {
+    _id: string;
+    title: string | null;
+    likes: number;
+    slug: Slug | null;
+  } | null;
+  totalLikes: number;
+} | null;
+// Variable: LIKE_QUERY
+// Query: *[_type == "like" && author._ref == $authorId && startup._ref == $startupId][0]{        _id    }
+export type LIKE_QUERYResult = {
+  _id: string;
+} | null;
+// Variable: LIKES_BY_AUTHOR_QUERY
+// Query: *[_type == "like" && author._ref == $id] | order(_createdAt desc){        _id,        startup->{            _id,            title,            slug,            _createdAt,            author->{                _id, name, image, bio            },            views,            description,            category,            image,            "likes": count(*[_type == "like" && startup._ref == ^._id])        }    }
+export type LIKES_BY_AUTHOR_QUERYResult = Array<{
+  _id: string;
+  startup: {
+    _id: string;
+    title: string | null;
+    slug: Slug | null;
+    _createdAt: string;
+    author: {
+      _id: string;
+      name: string | null;
+      image: string | null;
+      bio: string | null;
+    } | null;
+    views: number | null;
+    description: string | null;
+    category: string | null;
+    image: string | null;
+    likes: number;
+  } | null;
+}>;
 // Variable: PLAYLIST_BY_SLUG_QUERY
-// Query: *[_type == "playlist" && slug.current == $slug][0]{  _id,  title,  slug,  select[]->{    _id,    _createdAt,    title,    slug,    author->{      _id,      name,      slug,      image,      bio    },    views,    description,    category,    image,    pitch  }}
+// Query: *[_type == "playlist" && slug.current == $slug][0]{  _id,  title,  slug,  select[]->{    _id,    _createdAt,    title,    slug,    author->{      _id,      name,      slug,      image,      bio    },    views,    description,    category,    image,    pitch,    "likes": count(*[_type == "like" && startup._ref == ^._id])  }}
 export type PLAYLIST_BY_SLUG_QUERYResult = {
   _id: string;
   title: string | null;
@@ -307,18 +369,43 @@ export type PLAYLIST_BY_SLUG_QUERYResult = {
     category: string | null;
     image: string | null;
     pitch: string | null;
+    likes: number;
   }> | null;
 } | null;
+// Variable: MOST_LIKED_STARTUPS_QUERY
+// Query: *[_type == "startup" && defined(slug.current)] | order(count(*[_type == "like" && startup._ref == ^._id]) desc)[0...6]{    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image,    "likes": count(*[_type == "like" && startup._ref == ^._id])}
+export type MOST_LIKED_STARTUPS_QUERYResult = Array<{
+  _id: string;
+  title: string | null;
+  slug: Slug | null;
+  _createdAt: string;
+  author: {
+    _id: string;
+    name: string | null;
+    image: string | null;
+    bio: string | null;
+  } | null;
+  views: number | null;
+  description: string | null;
+  category: string | null;
+  image: string | null;
+  likes: number;
+}>;
 
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    "*[_type == \"startup\" && defined(slug.current) && !defined($search) || title match $search || category match $search || author->name match $search] | order(_createdAt desc){\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image\n}": STARTUPS_QUERYResult;
-    "*[_type == \"startup\" && _id == $id][0]{\n      _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name,username, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch,\n}": STARTUP_BY_ID_QUERYResult;
+    "*[_type == \"startup\" && defined(slug.current) && (!defined($search) || title match $search || category match $search || author->name match $search) && (!defined($category) || category == $category)] | order(\n  select(\n    $sort == \"oldest\" => _createdAt,\n    $sort == \"views\" => -views,\n    $sort == \"likes\" => -count(*[_type == \"like\" && startup._ref == ^._id]),\n    -_createdAt\n  )\n){\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": STARTUPS_QUERYResult;
+    "*[_type == \"startup\" && _id == $id][0]{\n      _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name,username, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": STARTUP_BY_ID_QUERYResult;
     "\n    *[_type == \"startup\" && _id == $id][0]{\n        _id, views\n    }\n    ": STARTUP_VIEWS_QUERYResult;
     "\n    *[_type == \"author\" && id == $id][0]{\n    _id,\n    id,\n    name,\n    username,\n    email,\n    image,\n    bio\n    }\n    ": AUTHOR_BY_GITHUB_ID_QUERYResult;
     "\n    *[_type == \"author\" && _id == $id][0]{\n    _id,\n    id,\n    name,\n    username,\n    email,\n    image,\n    bio\n    }\n    ": AUTHOR_BY_ID_QUERYResult;
-    "*[_type == \"playlist\" && slug.current == $slug][0]{\n  _id,\n  title,\n  slug,\n  select[]->{\n    _id,\n    _createdAt,\n    title,\n    slug,\n    author->{\n      _id,\n      name,\n      slug,\n      image,\n      bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch\n  }\n}": PLAYLIST_BY_SLUG_QUERYResult;
+    "\n    *[_type == \"startup\" && author._ref == $id] | order(_createdAt desc){\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n    }\n    ": STARTUPS_BY_AUTHOR_QUERYResult;
+    "\n    *[_type == \"author\" && _id == $id][0]{\n    _id,\n    name,\n    \"totalStartups\": count(*[_type == \"startup\" && author._ref == ^._id]),\n    \"startups\": *[_type == \"startup\" && author._ref == ^._id]{\n        views,\n        \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n    },\n    \"topStartup\": *[_type == \"startup\" && author._ref == ^._id] | order(views desc)[0]{\n        _id,\n        title,\n        views,\n        slug\n    },\n    \"mostLikedStartup\": *[_type == \"startup\" && author._ref == ^._id] | order(count(*[_type == \"like\" && startup._ref == ^._id]) desc)[0]{\n        _id,\n        title,\n        \"likes\": count(*[_type == \"like\" && startup._ref == ^._id]),\n        slug\n    },\n    \"totalLikes\": count(*[_type == \"like\" && startup->author._ref == ^._id])\n    }\n    ": AUTHOR_STATS_QUERYResult;
+    "\n    *[_type == \"like\" && author._ref == $authorId && startup._ref == $startupId][0]{\n        _id\n    }\n    ": LIKE_QUERYResult;
+    "\n    *[_type == \"like\" && author._ref == $id] | order(_createdAt desc){\n        _id,\n        startup->{\n            _id,\n            title,\n            slug,\n            _createdAt,\n            author->{\n                _id, name, image, bio\n            },\n            views,\n            description,\n            category,\n            image,\n            \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n        }\n    }\n    ": LIKES_BY_AUTHOR_QUERYResult;
+    "*[_type == \"playlist\" && slug.current == $slug][0]{\n  _id,\n  title,\n  slug,\n  select[]->{\n    _id,\n    _createdAt,\n    title,\n    slug,\n    author->{\n      _id,\n      name,\n      slug,\n      image,\n      bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n  }\n}": PLAYLIST_BY_SLUG_QUERYResult;
+    "*[_type == \"startup\" && defined(slug.current)] | order(count(*[_type == \"like\" && startup._ref == ^._id]) desc)[0...6]{\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": MOST_LIKED_STARTUPS_QUERYResult;
   }
 }

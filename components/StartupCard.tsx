@@ -1,24 +1,31 @@
 import { cn, formatDate } from "@/lib/utils"
-import { EyeIcon } from "lucide-react"
+import { EyeIcon, Heart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import React from "react"
 import { Button } from "./ui/button"
 import { Author, Startup } from "@/sanity/types"
 import { Skeleton } from "./ui/skeleton"
+import StartupActions from "./StartupActions"
 
-export type StartupTypeCard = Omit<Startup, "author"> & { author?: Author }
+export type StartupTypeCard = Omit<Startup, "author"> & { author?: Author; likes?: number }
 
-const StartupCard = ({ post }: { post: StartupTypeCard }) => {
-  const { _createdAt, views, author, title, category, _id, image, description } = post
+const StartupCard = ({ post, isOwner = false }: { post: StartupTypeCard; isOwner?: boolean }) => {
+  const { _createdAt, views, author, title, category, _id, image, description, likes } = post
 
   return (
     <li className="startup-card group">
       <div className="flex-between">
         <p className="startup_card_date">{formatDate(_createdAt)}</p>
-        <div className="flex gap-1.5">
-          <EyeIcon className="size-6 text-primary" />
-          <span className="text-16-medium">{views}</span>
+        <div className="flex gap-3">
+          <div className="flex gap-1.5">
+            <EyeIcon className="size-6 text-primary" />
+            <span className="text-16-medium">{views}</span>
+          </div>
+          <div className="flex gap-1.5">
+            <Heart className="size-6 text-primary" />
+            <span className="text-16-medium">{likes || 0}</span>
+          </div>
         </div>
       </div>
 
@@ -45,21 +52,27 @@ const StartupCard = ({ post }: { post: StartupTypeCard }) => {
         <Link href={`/?query=${category?.toLowerCase()}`}>
           <p className="text-16-medium">{category}</p>
         </Link>
-        <Button className="startup-card_btn" asChild>
-          <Link href={`/startup/${_id}`}>Details</Link>
-        </Button>
+        {isOwner ? (
+          <StartupActions startupId={_id} isOwner={isOwner} variant="card" authorId={author?._id} />
+        ) : (
+          <Button className="startup-card_btn" asChild>
+            <Link href={`/startup/${_id}`}>Details</Link>
+          </Button>
+        )}
       </div>
     </li>
   )
 }
 
 export const StartupCardSkeleton = () => {
-  ;<>
-    {[0, 1, 2, 3, 4].map((index: number) => (
-      <li key={cn("skeleton", index)}>
-        <Skeleton className="startup-card_skeleton" />
-      </li>
-    ))}
-  </>
+  return (
+    <>
+      {[0, 1, 2, 3, 4].map((index: number) => (
+        <li key={cn("skeleton", index)}>
+          <Skeleton className="startup-card_skeleton" />
+        </li>
+      ))}
+    </>
+  )
 }
 export default StartupCard
