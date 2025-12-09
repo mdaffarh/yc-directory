@@ -12,11 +12,7 @@ const SortFilter = () => {
   const handleSortChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
 
-    if (value === "newest") {
-      params.delete("sort")
-    } else {
-      params.set("sort", value)
-    }
+    params.set("sort", value)
 
     router.push(`/?${params.toString()}`, { scroll: false })
   }

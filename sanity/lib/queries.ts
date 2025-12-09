@@ -1,15 +1,10 @@
 import { defineQuery } from "next-sanity"
 
-export const STARTUPS_QUERY =
-  defineQuery(`*[_type == "startup" && defined(slug.current) && (!defined($search) || title match $search || category match $search || author->name match $search) && (!defined($category) || category == $category)] | order(
-  select(
-    $sort == "newest" => -_createdAt,
-    $sort == "oldest" => _createdAt,
-    $sort == "views" => -views,
-    $sort == "likes" => -count(*[_type == "like" && startup._ref == ^._id]),
-    -_createdAt
-  )
-){
+export const STARTUPS_QUERY = defineQuery(`
+  *[_type == "startup" && defined(slug.current) && 
+    (!defined($search) || title match $search || category match $search || author->name match $search) && 
+    (!defined($category) || category == $category)
+  ] | order(_createdAt desc){
     _id,
     title,
     slug,
