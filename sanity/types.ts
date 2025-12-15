@@ -67,7 +67,18 @@ export type Startup = {
   views?: number;
   description?: string;
   category?: string;
-  image?: string;
+  image?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
   pitch?: string;
 };
 
@@ -209,7 +220,7 @@ export type AllSanitySchemaTypes = Like | Playlist | Startup | Author | Markdown
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: sanity/lib/queries.ts
 // Variable: STARTUPS_QUERY
-// Query: *[_type == "startup" && defined(slug.current) && (!defined($search) || title match $search || category match $search || author->name match $search) && (!defined($category) || category == $category)] | order(  select(    $sort == "newest" => -_createdAt,    $sort == "oldest" => _createdAt,    $sort == "views" => -views,    $sort == "likes" => -count(*[_type == "like" && startup._ref == ^._id]),    -_createdAt  )){    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image,    "likes": count(*[_type == "like" && startup._ref == ^._id])}
+// Query: *[_type == "startup" && defined(slug.current) &&     (!defined($search) || title match $search || category match $search || author->name match $search) &&     (!defined($category) || category == $category)  ] | order(_createdAt desc){    _id,    title,    slug,    _createdAt,    author -> {        _id, name, image, bio    },    views,    description,    category,    image,    "likes": count(*[_type == "like" && startup._ref == ^._id])}
 export type STARTUPS_QUERYResult = Array<{
   _id: string;
   title: string | null;
@@ -224,7 +235,18 @@ export type STARTUPS_QUERYResult = Array<{
   views: number | null;
   description: string | null;
   category: string | null;
-  image: string | null;
+  image: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   likes: number;
 }>;
 // Variable: STARTUP_BY_ID_QUERY
@@ -244,7 +266,18 @@ export type STARTUP_BY_ID_QUERYResult = {
   views: number | null;
   description: string | null;
   category: string | null;
-  image: string | null;
+  image: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   pitch: string | null;
   likes: number;
 } | null;
@@ -292,7 +325,18 @@ export type STARTUPS_BY_AUTHOR_QUERYResult = Array<{
   views: number | null;
   description: string | null;
   category: string | null;
-  image: string | null;
+  image: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   likes: number;
 }>;
 // Variable: AUTHOR_STATS_QUERY
@@ -342,7 +386,18 @@ export type LIKES_BY_AUTHOR_QUERYResult = Array<{
     views: number | null;
     description: string | null;
     category: string | null;
-    image: string | null;
+    image: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
     likes: number;
   } | null;
 }>;
@@ -367,7 +422,18 @@ export type PLAYLIST_BY_SLUG_QUERYResult = {
     views: number | null;
     description: string | null;
     category: string | null;
-    image: string | null;
+    image: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
     pitch: string | null;
     likes: number;
   }> | null;
@@ -388,7 +454,18 @@ export type MOST_LIKED_STARTUPS_QUERYResult = Array<{
   views: number | null;
   description: string | null;
   category: string | null;
-  image: string | null;
+  image: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   likes: number;
 }>;
 
@@ -396,7 +473,7 @@ export type MOST_LIKED_STARTUPS_QUERYResult = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    "*[_type == \"startup\" && defined(slug.current) && (!defined($search) || title match $search || category match $search || author->name match $search) && (!defined($category) || category == $category)] | order(\n  select(\n    $sort == \"newest\" => -_createdAt,\n    $sort == \"oldest\" => _createdAt,\n    $sort == \"views\" => -views,\n    $sort == \"likes\" => -count(*[_type == \"like\" && startup._ref == ^._id]),\n    -_createdAt\n  )\n){\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": STARTUPS_QUERYResult;
+    "\n  *[_type == \"startup\" && defined(slug.current) && \n    (!defined($search) || title match $search || category match $search || author->name match $search) && \n    (!defined($category) || category == $category)\n  ] | order(_createdAt desc){\n    _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": STARTUPS_QUERYResult;
     "*[_type == \"startup\" && _id == $id][0]{\n      _id,\n    title,\n    slug,\n    _createdAt,\n    author -> {\n        _id, name,username, image, bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch,\n    \"likes\": count(*[_type == \"like\" && startup._ref == ^._id])\n}": STARTUP_BY_ID_QUERYResult;
     "\n    *[_type == \"startup\" && _id == $id][0]{\n        _id, views\n    }\n    ": STARTUP_VIEWS_QUERYResult;
     "\n    *[_type == \"author\" && id == $id][0]{\n    _id,\n    id,\n    name,\n    username,\n    email,\n    image,\n    bio\n    }\n    ": AUTHOR_BY_GITHUB_ID_QUERYResult;

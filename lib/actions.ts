@@ -6,23 +6,42 @@ import slugify from "slugify"
 import { writeClient } from "@/sanity/lib/write-client"
 import { revalidatePath } from "next/cache"
 
-export const createPitch = async (state: any, form: FormData, pitch: string) => {
+export const createPitch = async (state: any, form: FormData, pitch: string, category: string) => {
   const session = await auth()
 
   if (!session) return parseServerActionResponse({ error: "Not signed in", status: "ERROR" })
 
-  const { title, description, category, link } = Object.fromEntries(Array.from(form).filter(([key]) => key != "pitch"))
+  const title = form.get("title") as string
+  const description = form.get("description") as string
 
-  const slug = slugify(title as string, { lower: true, strict: true })
+  const slug = slugify(title, { lower: true, strict: true })
 
   try {
+    // Upload image to Sanity
+    const imageFile = form.get("link") as File
+    let imageAsset = null
+
+    if (imageFile && imageFile.size > 0) {
+      const buffer = await imageFile.arrayBuffer()
+      const uploadedImage = await writeClient.assets.upload("image", Buffer.from(buffer), {
+        filename: imageFile.name,
+      })
+      imageAsset = {
+        _type: "image",
+        asset: {
+          _type: "reference",
+          _ref: uploadedImage._id,
+        },
+      }
+    }
+
     const startup = {
       title,
       description,
       category,
-      image: link,
+      image: imageAsset,
       slug: {
-        _type: slug,
+        _type: "slug",
         current: slug,
       },
       author: {
@@ -56,31 +75,58 @@ export const updatePitch = async (state: any, form: FormData, pitch: string, id:
 
   if (!session) return parseServerActionResponse({ error: "Not signed in", status: "ERROR" })
 
-  const { title, description, category, link } = Object.fromEntries(Array.from(form).filter(([key]) => key != "pitch"))
+  const title = form.get("title") as string
+  const description = form.get("description") as string
+  const category = form.get("category") as string
+  const hasNewImage = form.get("hasNewImage") === "true"
 
-  const slug = slugify(title as string, { lower: true, strict: true })
+  const slug = slugify(title, { lower: true, strict: true })
 
   try {
     // Verify ownership before updating
-    const existingStartup = await writeClient.fetch(`*[_type == "startup" && _id == $id][0]{ author }`, { id })
+    const existingStartup = await writeClient.fetch(`*[_type == "startup" && _id == $id][0]{ author, image }`, { id })
 
     if (existingStartup?.author?._ref !== session?.id) {
       return parseServerActionResponse({ error: "Unauthorized", status: "ERROR" })
     }
 
-    const startup = {
+    // Handle image upload if new image provided
+    let imageAsset = existingStartup.image // Keep existing image by default
+
+    if (hasNewImage) {
+      const imageFile = form.get("link") as File
+      if (imageFile && imageFile.size > 0) {
+        const buffer = await imageFile.arrayBuffer()
+        const uploadedImage = await writeClient.assets.upload("image", Buffer.from(buffer), {
+          filename: imageFile.name,
+        })
+        imageAsset = {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: uploadedImage._id,
+          },
+        }
+      }
+    }
+
+    const updateData: any = {
       title,
       description,
       category,
-      image: link,
-      slug: {
-        _type: slug,
-        current: slug,
-      },
+      image: imageAsset,
       pitch,
     }
 
-    const result = await writeClient.patch(id).set(startup).commit()
+    // Only update slug if title changed
+    if (slug) {
+      updateData.slug = {
+        _type: "slug",
+        current: slug,
+      }
+    }
+
+    const result = await writeClient.patch(id).set(updateData).commit()
 
     revalidatePath(`/startup/${id}`)
     revalidatePath("/")

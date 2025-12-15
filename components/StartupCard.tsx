@@ -7,11 +7,15 @@ import { Button } from "./ui/button"
 import { Author, Startup } from "@/sanity/types"
 import { Skeleton } from "./ui/skeleton"
 import StartupActions from "./StartupActions"
+import { urlFor } from "@/sanity/lib/image"
 
 export type StartupTypeCard = Omit<Startup, "author"> & { author?: Author; likes?: number }
 
 const StartupCard = ({ post, isOwner = false }: { post: StartupTypeCard; isOwner?: boolean }) => {
   const { _createdAt, views, author, title, category, _id, image, description, likes } = post
+
+  // Get image URL from Sanity asset
+  const imageUrl = image ? urlFor(image).width(600).height(400).url() : "/placeholder-startup.png"
 
   return (
     <li className="startup-card group">
@@ -45,7 +49,7 @@ const StartupCard = ({ post, isOwner = false }: { post: StartupTypeCard; isOwner
 
       <Link href={`/startup/${_id}`}>
         <p className="startup-desc_card">{description}</p>
-        <img src={image} alt="placeholder" className="startup-card_img" />
+        <img src={imageUrl} alt={title || "Startup"} className="startup-card_img" />
       </Link>
 
       <div className="flex-between gap-3 mt-5">

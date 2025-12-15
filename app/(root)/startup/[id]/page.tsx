@@ -12,6 +12,7 @@ import StartupCard, { StartupTypeCard } from "@/components/StartupCard"
 import { auth } from "@/auth"
 import LikeButton from "@/components/LikeButton"
 import StartupActions from "@/components/StartupActions"
+import { urlFor } from "@/sanity/lib/image"
 
 export const experimental_ppr = true
 
@@ -35,6 +36,9 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   const parsedContent = md.render(post?.pitch || "")
 
+  // Get image URL from Sanity asset
+  const imageUrl = post.image ? urlFor(post.image).width(1200).height(675).url() : "/placeholder.png"
+
   return (
     <>
       <section className="pink_container !min-h-[230px]">
@@ -43,7 +47,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <p className="sub-heading !max-w-5xl">{post.description}</p>
       </section>
       <section className="section_container">
-        <Image src={post.image ?? "/placeholder.png"} alt="thumbnail" className="w-full max-w-3xl mx-auto aspect-video object-cover rounded-xl" width={1200} height={675} priority />
+        <Image src={imageUrl} alt={post.title || "Startup thumbnail"} className="w-full max-w-3xl mx-auto aspect-video object-cover rounded-xl" width={1200} height={675} priority />
         <div className="space-y-5 mt-10 max-w-4xl mx-auto">
           <div className="flex-between gap-5">
             <Link href={`/user/${post.author?._id}`} className="flex gap-2 items-center mb-3">
