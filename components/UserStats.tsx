@@ -1,5 +1,6 @@
 import { client } from "@/sanity/lib/client"
 import { AUTHOR_STATS_QUERY } from "@/sanity/lib/queries"
+import { calculateTotalViews } from "@/lib/helpers"
 import { Eye, FileText, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import React from "react"
@@ -10,7 +11,7 @@ const UserStats = async ({ id }: { id: string }) => {
   if (!stats) return null
 
   const { totalStartups = 0, startups = [], topStartup } = stats
-  const totalViews = startups.reduce((acc: number, s: { views: number }) => acc + (s.views || 0), 0)
+  const totalViews = calculateTotalViews(startups)
 
   return (
     <div className="w-full">

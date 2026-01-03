@@ -31,7 +31,7 @@ const UserStatsClient = ({ id, userName }: { id: string; userName: string }) => 
   if (!stats) return null
 
   const { totalStartups = 0, startups = [], topStartup } = stats
-  const totalViews = startups.reduce((acc: number, s: { views: number }) => acc + (s.views || 0), 0)
+  const totalViews = calculateTotalViews(startups)
 
   return (
     <ExportCard filename={`${userName}-analytics`} title="Analytics Overview">

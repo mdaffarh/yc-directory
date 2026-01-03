@@ -7,19 +7,19 @@ import { client } from "@/sanity/lib/client"
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ query?: string; sort?: string; category?: string }> }) {
   const { query, sort, category } = await searchParams
-  
+
   // Build order clause based on sort parameter
   const sortValue = sort || "newest"
   let orderClause = "_createdAt desc"
-  
+
   if (sortValue === "oldest") {
     orderClause = "_createdAt asc"
   } else if (sortValue === "views") {
     orderClause = "views desc"
   } else if (sortValue === "likes") {
-    orderClause = "count(*[_type == \"like\" && startup._ref == ^._id]) desc"
+    orderClause = 'count(*[_type == "like" && startup._ref == ^._id]) desc'
   }
-  
+
   const params = {
     search: query || null,
     category: category || null,
@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
       image,
       "likes": count(*[_type == "like" && startup._ref == ^._id])
     }`
-  
+
   const posts = await client.withConfig({ useCdn: false }).fetch(dynamicQuery, params)
 
   // Fetch most liked and editor picks only if no search query

@@ -8,6 +8,8 @@ import { toPng } from "html-to-image"
 import { toast } from "@/hooks/use-toast"
 import { Download } from "lucide-react"
 import Image from "next/image"
+import { urlFor } from "@/sanity/lib/image"
+import { calculateTotalViews } from "@/lib/helpers"
 
 interface StatsData {
   totalStartups: number
@@ -89,7 +91,7 @@ const ProfileExport = ({ id }: { id: string }) => {
   if (!stats || !user) return null
 
   const { totalStartups = 0, startups = [], topStartup, mostLikedStartup, totalLikes = 0 } = stats
-  const totalViews = startups.reduce((acc: number, s: { views: number | null }) => acc + (s.views || 0), 0)
+  const totalViews = calculateTotalViews(startups)
 
   return (
     <div className="relative w-full">

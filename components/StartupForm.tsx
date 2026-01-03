@@ -125,15 +125,7 @@ const StartupForm = () => {
         <label htmlFor="title" className="startup-form_label">
           Title
         </label>
-        <Input 
-          id="title" 
-          name="title" 
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="startup-form_input" 
-          required 
-          placeholder="Startup Title" 
-        />
+        <Input id="title" name="title" value={title} onChange={e => setTitle(e.target.value)} className="startup-form_input" required placeholder="Startup Title" />
 
         {errors.title && <p className="startup-form_error">{errors.title}</p>}
       </div>
@@ -141,15 +133,7 @@ const StartupForm = () => {
         <label htmlFor="description" className="startup-form_label">
           Description
         </label>
-        <Textarea 
-          id="description" 
-          name="description" 
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="startup-form_textarea" 
-          required 
-          placeholder="Startup Description (Min. 20 characters)" 
-        />
+        <Textarea id="description" name="description" value={description} onChange={e => setDescription(e.target.value)} className="startup-form_textarea" required placeholder="Startup Description (Min. 20 characters)" />
 
         {errors.description && <p className="startup-form_error">{errors.description}</p>}
       </div>
@@ -177,7 +161,7 @@ const StartupForm = () => {
         <label htmlFor="image" className="startup-form_label">
           Startup Image
         </label>
-        
+
         <div className="startup-form_image-upload">
           <label htmlFor="link" className="startup-form_image-label">
             {imagePreview ? (
@@ -190,21 +174,19 @@ const StartupForm = () => {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <svg className="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 <p className="text-sm font-medium mb-1">Click to upload image</p>
                 <p className="text-xs text-gray-400">PNG, JPG, GIF up to 5MB</p>
               </div>
             )}
           </label>
-          <Input 
-            id="link" 
-            name="link" 
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            onChange={handleImageChange} 
-          />
+          <Input id="link" name="link" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
         </div>
 
         {errors.link && <p className="startup-form_error">{errors.link}</p>}
