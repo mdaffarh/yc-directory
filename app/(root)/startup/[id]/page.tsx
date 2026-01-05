@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/utils"
-import { client } from "@/sanity/lib/client"
+import { client, fetchWithRetry } from "@/sanity/lib/client"
 import { LIKE_QUERY, PLAYLIST_BY_SLUG_QUERY, STARTUP_BY_ID_QUERY } from "@/sanity/lib/queries"
 import { notFound } from "next/navigation"
 import React, { Suspense } from "react"
@@ -23,9 +23,18 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const session = await auth()
 
   const [post, editorPicksPlaylist, like] = await Promise.all([
-    client.withConfig({ useCdn: false }).fetch(STARTUP_BY_ID_QUERY, { id }),
-    client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" }),
-    session ? client.withConfig({ useCdn: false }).fetch(LIKE_QUERY, { authorId: session.id, startupId: id }) : null,
+    fetchWithRetry(
+      () => client.withConfig({ useCdn: false }).fetch(STARTUP_BY_ID_QUERY, { id }),
+      { fallback: null }
+    ),
+    fetchWithRetry(
+      () => client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" }),
+      { fallback: null }
+    ),
+    session ? fetchWithRetry(
+      () => client.withConfig({ useCdn: false }).fetch(LIKE_QUERY, { authorId: session.id, startupId: id }),
+      { fallback: null }
+    ) : null,
   ])
   const editorPosts = editorPicksPlaylist?.select || []
 

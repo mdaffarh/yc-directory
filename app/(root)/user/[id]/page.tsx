@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { client } from "@/sanity/lib/client"
+import { client, fetchWithRetry } from "@/sanity/lib/client"
 import { AUTHOR_BY_ID_QUERY } from "@/sanity/lib/queries"
 import Image from "next/image"
 import { notFound } from "next/navigation"
@@ -17,7 +17,10 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const id = (await params).id
   const session = await auth()
 
-  const user = await client.fetch(AUTHOR_BY_ID_QUERY, { id })
+  const user = await fetchWithRetry(
+    () => client.fetch(AUTHOR_BY_ID_QUERY, { id }),
+    { fallback: null }
+  )
 
   if (!user) return notFound()
   return (

@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import StartupFormEdit from "@/components/StartupFormEdit"
-import { client } from "@/sanity/lib/client"
+import { client, fetchWithRetry } from "@/sanity/lib/client"
 import { STARTUP_BY_ID_QUERY } from "@/sanity/lib/queries"
 import { notFound, redirect } from "next/navigation"
 
@@ -10,7 +10,10 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!session) redirect("/")
 
-  const post = await client.fetch(STARTUP_BY_ID_QUERY, { id })
+  const post = await fetchWithRetry(
+    () => client.fetch(STARTUP_BY_ID_QUERY, { id }),
+    { fallback: null }
+  )
 
   if (!post) return notFound()
 

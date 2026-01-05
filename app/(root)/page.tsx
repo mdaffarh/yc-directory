@@ -3,7 +3,7 @@ import SearchForm from "../../components/SearchForm"
 import { MOST_LIKED_STARTUPS_QUERY, PLAYLIST_BY_SLUG_QUERY } from "@/sanity/lib/queries"
 import { StartupTypeCard } from "@/components/StartupCard"
 import SortFilter from "@/components/SortFilter"
-import { client } from "@/sanity/lib/client"
+import { client, fetchWithRetry } from "@/sanity/lib/client"
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ query?: string; sort?: string; category?: string }> }) {
   const { query, sort, category } = await searchParams
@@ -45,10 +45,33 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
       "likes": count(*[_type == "like" && startup._ref == ^._id])
     }`
 
-  const posts = await client.withConfig({ useCdn: false }).fetch(dynamicQuery, params)
+  // Fetch main posts with retry logic and fallback
+  const posts = await fetchWithRetry(
+    () => client.withConfig({ useCdn: false }).fetch(dynamicQuery, params),
+    { fallback: [] as StartupTypeCard[] }
+  )
 
   // Fetch most liked and editor picks only if no search query
-  const [mostLikedStartups, editorPicks] = !query ? await Promise.all([client.fetch(MOST_LIKED_STARTUPS_QUERY), client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" })]) : [null, null]
+  let mostLikedStartups = null
+  let editorPicks = null
+  
+  if (!query) {
+    try {
+      [mostLikedStartups, editorPicks] = await Promise.all([
+        fetchWithRetry(
+          () => client.fetch(MOST_LIKED_STARTUPS_QUERY),
+          { fallback: [] as StartupTypeCard[] }
+        ),
+        fetchWithRetry(
+          () => client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: "editor-picks" }),
+          { fallback: null }
+        )
+      ])
+    } catch (error) {
+      console.error('Failed to fetch additional content:', error)
+      // Continue with null values
+    }
+  }
 
   return (
     <>
